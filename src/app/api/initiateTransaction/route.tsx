@@ -27,15 +27,15 @@ export async function POST(request: NextRequest) {
 
     // Check for required fields
     if (
-      !initiator ||
-      !sender ||
-      !receiver ||
-      !amount ||
-      !chainId ||
-      !sign ||
-      !validAfter ||
-      !validBefore ||
-      !nonce
+      initiator === undefined ||
+      sender === undefined ||
+      receiver === undefined ||
+      amount === undefined ||
+      chainId === undefined ||
+      sign === undefined ||
+      validAfter === undefined ||
+      validBefore === undefined ||
+      nonce === undefined
     ) {
       return NextResponse.json(
         { error: "Missing required fields" },

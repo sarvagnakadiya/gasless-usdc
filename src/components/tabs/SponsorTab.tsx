@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useAccount, useWriteContract } from "wagmi";
 import contractABI from "@/usdc.json";
-import { bytesToHex, numberToBytes, pad, toHex, trim } from "viem";
+import { pad } from "viem";
 import { initializeClient } from "@/app/utils/publicClient";
+
 // Define a TypeScript interface for the transaction data
 interface Transaction {
   _id: string;
   initiator: string;
   sender: string;
   receiver: string;
-  amount: number | string; // Handle both number and string types for amount
+  amount: number | string;
   chainId: number;
   validAfter: number;
   validBefore: number;
@@ -56,7 +57,8 @@ const SponsorTab: React.FC = () => {
     nonce: number,
     sign: string,
     validAfter: number,
-    validBefore: number
+    validBefore: number,
+    transactionId: string
   ) => {
     if (!isConnected) {
       alert("Please connect your account to participate.");
@@ -81,19 +83,32 @@ const SponsorTab: React.FC = () => {
           from,
           to,
           value,
-          validAfter, // Define validAfter as needed
-          validBefore, // Define validBefore as needed
-          pad(validateAddress(nonce.toString())), // Ensure this function is defined
+          validAfter,
+          validBefore,
+          pad(validateAddress(nonce.toString())),
           sign,
         ],
       });
       console.log(tx);
+
       const receipt = await client.waitForTransactionReceipt({ hash: tx });
       console.log(receipt);
 
       if (receipt) {
+        // Call the execute API with the transaction ID and hash
+        await fetch("/api/execute", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            transactionId,
+            transactionHash: receipt.transactionHash,
+          }),
+        });
+
         setIsParticipating(false);
-        window.location.reload();
+        // window.location.reload();
       }
     } catch (error) {
       console.log("Error participating:", error);
@@ -103,15 +118,24 @@ const SponsorTab: React.FC = () => {
   };
 
   const handleExecute = (transaction: Transaction) => {
-    const from = transaction.sender; // or the field you want to use
-    const to = transaction.receiver; // or the field you want to use
-    const value = transaction.amount; // Ensure this is the correct type
-    const nonce = transaction.nonce; // Define nonce as needed or fetch from the transaction data
+    const from = transaction.sender;
+    const to = transaction.receiver;
+    const value = transaction.amount;
+    const nonce = transaction.nonce;
     const sign = transaction.sign;
     const validAfter = transaction.validAfter;
     const validBefore = transaction.validBefore;
 
-    handleTransfer(from, to, value, nonce, sign, validAfter, validBefore);
+    handleTransfer(
+      from,
+      to,
+      value,
+      nonce,
+      sign,
+      validAfter,
+      validBefore,
+      transaction._id // Pass the transaction ID
+    );
   };
 
   if (loading) {
@@ -150,10 +174,7 @@ const SponsorTab: React.FC = () => {
               <strong>Executed:</strong> {transaction.executed ? "Yes" : "No"}
             </p>
             <p className="text-black">
-              <strong>Sign:</strong> {transaction.sign}
-            </p>
-            <p className="text-black">
-              <strong>Sign:</strong> {transaction.nonce}
+              <strong>Nonce:</strong> {transaction.nonce}
             </p>
             <p className="text-black">
               <strong>Initiate Date:</strong>{" "}
@@ -162,8 +183,9 @@ const SponsorTab: React.FC = () => {
             <button
               onClick={() => handleExecute(transaction)}
               className="mt-2 bg-blue-500 text-white px-4 py-2 rounded-md"
+              disabled={isParticipating}
             >
-              Execute
+              {isParticipating ? "Processing..." : "Execute"}
             </button>
           </div>
         ))
