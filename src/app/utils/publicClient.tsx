@@ -1,6 +1,6 @@
 import { getPublicClient } from "@wagmi/core";
 import { config } from "@/app/utils/config";
-// import { mainnet } from "@wagmi/core/chains";
+import { mainnet } from "@wagmi/core/chains";
 
 import { type Chain } from "viem";
 export const local = {
@@ -30,7 +30,7 @@ export const local = {
 
 export const initializeClient = () => {
   const client = getPublicClient(config, {
-    chainId: local.id,
+    chainId: mainnet.id,
   });
   return client;
 };

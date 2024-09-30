@@ -1,5 +1,5 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
-// import { mainnet } from "wagmi/chains";
+import { mainnet } from "wagmi/chains";
 
 import { type Chain } from "viem";
 export const local = {
@@ -31,8 +31,8 @@ export const config = getDefaultConfig({
   appName: "RainbowKit demo",
   projectId: "8a002f09d4fc6fba7c4cd6d06df5e19f",
   chains: [
-    local,
-    ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === "true" ? [local] : []),
+    mainnet,
+    ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === "true" ? [mainnet] : []),
   ],
   ssr: true,
 });
